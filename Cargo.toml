@@ -1,0 +1,10 @@
+[package]
+name = "mq"
+version = "0.1.0"
+authors = ["Prabir Shrestha <mail@prabir.me>"]
+edition = "2021"
+license = "MIT"
+description = "Message Queue"
+repository = "https://github.com/prabirshrestha/mq"
+
+[dependencies]
