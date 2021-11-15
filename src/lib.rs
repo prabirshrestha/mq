@@ -12,4 +12,6 @@ pub trait MessageQueue {
 
     async fn ack(&mut self, message_id: &str);
     async fn nack(&mut self, message_id: &str);
+
+    async fn ping(&mut self);
 }
