@@ -8,3 +8,4 @@ description = "Message Queue"
 repository = "https://github.com/prabirshrestha/mq"
 
 [dependencies]
+async-trait = "0.1.51"
