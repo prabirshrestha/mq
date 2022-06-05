@@ -4,7 +4,7 @@ version = "0.2.0"
 authors = ["Prabir Shrestha <mail@prabir.me>"]
 edition = "2021"
 license = "MIT"
-description = "Message Queue"
+description = "Simple Message Queue"
 repository = "https://github.com/prabirshrestha/mq"
 
 [dependencies]
@@ -12,5 +12,5 @@ async-trait = "0.1.51"
 thiserror = "1.0.31"
 
 [features]
-default = ['blackhole-broker']
+default = []
 blackhole-broker = []
