@@ -1,4 +1,4 @@
-use crate::{MessageQueue, MqError, MqMessage, MqMessageBytes, MqResult};
+use crate::{MessageQueue, MqMessage, MqMessageBytes, MqResult};
 pub use async_trait::async_trait;
 
 pub struct BlackholeMessageBroker {}
@@ -24,11 +24,7 @@ impl MessageQueue for BlackholeMessageBroker {
         _queue_name: &str,
         _visiblity_timeout_in_ms: Option<u64>,
     ) -> MqResult<Option<MqMessage<E>>> {
-        let data = E::try_from(MqMessageBytes(vec![])).map_err(MqError::CannotDecodeMessage)?;
-        Ok(Some(MqMessage {
-            id: String::from("blackholeid"),
-            data,
-        }))
+        Ok(None)
     }
 
     async fn enqueue<M: Into<MqMessageBytes> + Send>(
