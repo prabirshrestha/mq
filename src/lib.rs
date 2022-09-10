@@ -1,6 +1,103 @@
 pub use async_trait::async_trait;
-pub type DateTime = chrono::DateTime<chrono::Utc>;
-pub use chrono::{Duration, Utc};
+pub use chrono::{DateTime, Duration, Utc};
+
+const DEFAULT_QUEUE_NAME: &'static str = "default";
+
+#[derive(Debug)]
+pub struct Job {
+    id: String,
+    queue: String,
+    at: Option<DateTime<Utc>>,
+    data: Option<MqMessageBytes>,
+}
+
+impl Job {
+    pub fn new() -> Self {
+        Self::from_id(xid::new().to_string())
+    }
+
+    pub fn from_id(id: String) -> Self {
+        Self {
+            id,
+            queue: DEFAULT_QUEUE_NAME.into(),
+            at: None,
+            data: None,
+        }
+    }
+
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    pub fn queue(&self) -> &str {
+        &self.queue
+    }
+
+    pub fn with_id(mut self, id: String) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn on_queue(mut self, queue: String) -> Self {
+        if queue.is_empty() {
+            self.queue = DEFAULT_QUEUE_NAME.into();
+        } else {
+            self.queue = queue;
+        }
+        self
+    }
+
+    pub fn schedule_at(mut self, at: DateTime<Utc>) -> Self {
+        self.at = Some(at);
+        self
+    }
+
+    pub fn schedule_in(mut self, duration: Duration) -> Self {
+        self.at = Some(Utc::now() + duration);
+        self
+    }
+
+    pub fn schedule_immediate(mut self) -> Self {
+        self.at = None;
+        self
+    }
+
+    pub fn with_data(mut self, data: Option<MqMessageBytes>) -> Self {
+        self.data = data;
+        self
+    }
+}
+
+#[async_trait]
+pub trait Producer {
+    async fn enqueue(&mut self, job: Job) -> MqResult<()>;
+}
+
+pub struct NullProducer {}
+
+impl NullProducer {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+#[async_trait]
+impl Producer for NullProducer {
+    async fn enqueue(&mut self, job: Job) -> MqResult<()> {
+        Ok(())
+    }
+}
+
+async fn hello() {
+    let mut p = NullProducer::new();
+
+    let j1 = Job::new()
+        .on_queue("default".into())
+        .schedule_at(Utc::now())
+        .with_data(Some("hello".into()));
+
+    p.enqueue(j1).await.unwrap();
+}
 
 #[async_trait]
 pub trait MqManagement {
@@ -10,11 +107,11 @@ pub trait MqManagement {
 
 #[async_trait]
 pub trait MqConsumer {
-    async fn dequeue<E: TryFrom<MqMessageBytes, Error = Vec<u8>>>(
-        &mut self,
-        queue_name: &str,
-        visiblity_timeout_in_ms: Option<u64>,
-    ) -> MqResult<Option<MqMessage<E>>>;
+    // async fn dequeue<E: TryFrom<MqMessageBytes, Error = Vec<u8>>>(
+    //     &mut self,
+    //     queue_name: &str,
+    //     visiblity_timeout_in_ms: Option<u64>,
+    // ) -> MqResult<Option<MqMessage<E>>>;
 
     async fn ack(&mut self, message_id: &str) -> MqResult<()>;
 
@@ -25,31 +122,32 @@ pub trait MqConsumer {
 
 #[async_trait]
 pub trait MessageQueue {
-    async fn schedule_at<M: Into<MqMessageBytes> + Send>(
-        &mut self,
-        queue_name: &str,
-        message: M,
-        scheduled_at: DateTime,
-    ) -> MqResult<String>;
+    // async fn schedule_at<M: Into<MqMessageBytes> + Send>(
+    //     &mut self,
+    //     queue_name: &str,
+    //     message: M,
+    //     scheduled_at: DateTime<Utc>,
+    // ) -> MqResult<String>;
 
-    async fn schedule<M: Into<MqMessageBytes> + Send>(
-        &mut self,
-        queue_name: &str,
-        message: M,
-    ) -> MqResult<String> {
-        Ok(self.schedule_at(queue_name, message, Utc::now()).await?)
-    }
+    // async fn schedule<M: Into<MqMessageBytes> + Send>(
+    //     &mut self,
+    //     queue_name: &str,
+    //     message: M,
+    //     job_create_options: JobCreateOptions,
+    // ) -> MqResult<String> {
+    //     Ok(self.schedule_at(queue_name, message, Utc::now()).await?)
+    // }
 
-    async fn schedule_in<M: Into<MqMessageBytes> + Send>(
-        &mut self,
-        queue_name: &str,
-        message: M,
-        schedule_in: Duration,
-    ) -> MqResult<String> {
-        Ok(self
-            .schedule_at(queue_name, message, Utc::now() + schedule_in)
-            .await?)
-    }
+    // async fn schedule_in<M: Into<MqMessageBytes> + Send>(
+    //     &mut self,
+    //     queue_name: &str,
+    //     message: M,
+    //     schedule_in: Duration,
+    // ) -> MqResult<String> {
+    //     Ok(self
+    //         .schedule_at(queue_name, message, Utc::now() + schedule_in)
+    //         .await?)
+    // }
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -62,12 +160,6 @@ pub type MqResult<T> = Result<T, MqError>;
 
 #[derive(Debug)]
 pub struct MqMessageBytes(Vec<u8>);
-
-#[derive(Debug)]
-pub struct MqMessage<T: TryFrom<MqMessageBytes>> {
-    pub id: String,
-    pub data: T,
-}
 
 impl MqMessageBytes {
     pub fn into_bytes(self) -> Vec<u8> {

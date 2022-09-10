@@ -11,6 +11,7 @@ repository = "https://github.com/prabirshrestha/mq"
 async-trait = "0.1.51"
 chrono = "0.4.22"
 thiserror = "1.0.31"
+xid = "1.0.2"
 
 [features]
 default = []
