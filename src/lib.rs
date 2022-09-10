@@ -7,34 +7,12 @@ pub use producer::*;
 mod consumer;
 pub use consumer::*;
 
+pub mod backend;
+
 pub use async_trait::async_trait;
 pub use chrono::{DateTime, Duration, Utc};
-use producer::{NullProducer, Producer};
 
 const DEFAULT_QUEUE_NAME: &'static str = "default";
-
-async fn hello() {
-    let mut p = NullProducer::new();
-
-    let j1 = Job::new("foo", "hello")
-        .on_queue("default".into())
-        .schedule_immediate();
-
-    p.enqueue(j1).await.unwrap();
-
-    let mut c = NullConsumer::new();
-    c.register("foo", |j| {
-        println!("foo: {}", j.id());
-        Ok(())
-    })
-    .register("bar", |j| {
-        println!("bar: {}", j.id());
-        Ok(())
-    });
-
-    c.run([ConsumerQueueOptions::new("default", 1)].into_iter())
-        .unwrap();
-}
 
 #[derive(thiserror::Error, Debug)]
 pub enum MqError {

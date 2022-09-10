@@ -1,5 +1,3 @@
-use fnv::FnvHashMap;
-
 use crate::{Job, MqResult, DEFAULT_QUEUE_NAME};
 
 pub struct ConsumerQueueOptions {
@@ -39,8 +37,8 @@ impl Default for ConsumerQueueOptions {
     }
 }
 
-type JobRunner = dyn Fn(Job) -> MqResult<()> + Send + Sync;
-type BoxedJobRunner = Box<JobRunner>;
+pub type JobRunner = dyn Fn(Job) -> MqResult<()> + Send + Sync;
+pub type BoxedJobRunner = Box<JobRunner>;
 
 pub trait Consumer {
     fn register<K, H>(&mut self, kind: K, handler: H) -> &mut Self
@@ -51,42 +49,4 @@ pub trait Consumer {
     fn run<I>(&mut self, queues: I) -> MqResult<()>
     where
         I: Iterator<Item = ConsumerQueueOptions>;
-}
-
-pub struct NullConsumer {
-    callbacks: FnvHashMap<String, BoxedJobRunner>,
-    workers: usize,
-}
-
-impl Default for NullConsumer {
-    fn default() -> Self {
-        Self {
-            callbacks: Default::default(),
-            workers: 1,
-        }
-    }
-}
-
-impl NullConsumer {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl Consumer for NullConsumer {
-    fn register<K, H>(&mut self, kind: K, handler: H) -> &mut Self
-    where
-        K: Into<String>,
-        H: Fn(Job) -> MqResult<()> + Send + Sync + 'static,
-    {
-        self.callbacks.insert(kind.into(), Box::new(handler));
-        self
-    }
-
-    fn run<I>(&mut self, queues: I) -> MqResult<()>
-    where
-        I: Iterator<Item = ConsumerQueueOptions>,
-    {
-        loop {}
-    }
 }

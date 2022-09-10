@@ -16,26 +16,27 @@ tokio = { version = "1.19.1", features = ["full"] }
 ## main.rs
 
 ```rust
-use mq::{broker::blackhole::BlackholeMessageBroker, MessageQueue, MqResult};
-
 #[tokio::main]
 async fn main() -> MqResult<()> {
-    let mut mq = BlackholeMessageBroker::new();
+    let mut p = NullProducer::new();
 
-    mq.create_queue("hello").await?;
+    let j1 = Job::new("foo", "hello")
+        .on_queue("default".into())
+        .schedule_immediate();
 
-    mq.enqueue("hello", "some message").await?;
+    p.enqueue(j1).await.unwrap();
 
-    let msg = mq.dequeue::<String>("hello", None).await?;
-    match msg {
-        Some(msg) => {
-            println!("message id: {}", msg.id);
-            println!("message data: {}", msg.data);
-        }
-        None => println!("no message"),
-    }
+    let mut c = NullConsumer::new();
+    c.register("foo", |j| {
+        println!("foo: {}", j.id());
+        Ok(())
+    })
+    .register("bar", |j| {
+        println!("bar: {}", j.id());
+        Ok(())
+    });
 
-    mq.delete_queue("hello").await?;
+    c.run([ConsumerQueueOptions::new("default", 1)].into_iter())?;
 
     Ok(())
 }

@@ -33,6 +33,10 @@ impl Job {
         &self.queue
     }
 
+    pub fn kind(&self) -> &str {
+        &self.kind
+    }
+
     pub fn data(&self) -> &MqMessageBytes {
         &self.data
     }
