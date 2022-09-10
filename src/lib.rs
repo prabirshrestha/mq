@@ -35,6 +35,10 @@ impl Job {
         &self.queue
     }
 
+    pub fn data(&self) -> &MqMessageBytes {
+        &self.data
+    }
+
     pub fn with_id(mut self, id: String) -> Self {
         self.id = id;
         self
