@@ -16,4 +16,3 @@ xid = "1.0.2"
 
 [features]
 default = []
-blackhole-broker = []

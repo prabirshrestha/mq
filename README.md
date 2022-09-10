@@ -9,7 +9,7 @@ Example
 ## Cargo.toml
 ```toml
 [dependencies]
-mq = { version = "0.3.0", features = ["blackhole-broker"] }
+mq = { version = "0.3.0" }
 tokio = { version = "1.19.1", features = ["full"] }
 ```
 
