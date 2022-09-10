@@ -6,22 +6,24 @@ const DEFAULT_QUEUE_NAME: &'static str = "default";
 #[derive(Debug)]
 pub struct Job {
     id: String,
+    kind: String,
+    data: MqMessageBytes,
     queue: String,
     at: Option<DateTime<Utc>>,
-    data: Option<MqMessageBytes>,
 }
 
 impl Job {
-    pub fn new() -> Self {
-        Self::from_id(xid::new().to_string())
-    }
-
-    pub fn from_id(id: String) -> Self {
+    pub fn new<K, D>(kind: K, data: D) -> Self
+    where
+        K: Into<String>,
+        D: Into<MqMessageBytes>,
+    {
         Self {
-            id,
+            id: xid::new().to_string(),
+            kind: kind.into(),
+            data: data.into(),
             queue: DEFAULT_QUEUE_NAME.into(),
             at: None,
-            data: None,
         }
     }
 
@@ -62,7 +64,7 @@ impl Job {
         self
     }
 
-    pub fn with_data(mut self, data: Option<MqMessageBytes>) -> Self {
+    pub fn with_data(mut self, data: MqMessageBytes) -> Self {
         self.data = data;
         self
     }
@@ -88,13 +90,15 @@ impl Producer for NullProducer {
     }
 }
 
+#[async_trait]
+pub trait Consumer {}
+
 async fn hello() {
     let mut p = NullProducer::new();
 
-    let j1 = Job::new()
+    let j1 = Job::new("foo", "hello")
         .on_queue("default".into())
-        .schedule_at(Utc::now())
-        .with_data(Some("hello".into()));
+        .schedule_immediate();
 
     p.enqueue(j1).await.unwrap();
 }
