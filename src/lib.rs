@@ -1,29 +1,55 @@
-pub mod broker;
-
 pub use async_trait::async_trait;
+pub type DateTime = chrono::DateTime<chrono::Utc>;
+pub use chrono::{Duration, Utc};
 
 #[async_trait]
-pub trait MessageQueue {
+pub trait MqManagement {
     async fn create_queue(&mut self, queue_name: &str) -> MqResult<()>;
     async fn delete_queue(&mut self, queue_name: &str) -> MqResult<()>;
+}
 
+#[async_trait]
+pub trait MqConsumer {
     async fn dequeue<E: TryFrom<MqMessageBytes, Error = Vec<u8>>>(
         &mut self,
         queue_name: &str,
         visiblity_timeout_in_ms: Option<u64>,
     ) -> MqResult<Option<MqMessage<E>>>;
 
-    async fn enqueue<M: Into<MqMessageBytes> + Send>(
-        &mut self,
-        queue_name: &str,
-        message: M,
-    ) -> MqResult<String>;
-
     async fn ack(&mut self, message_id: &str) -> MqResult<()>;
 
     async fn nack(&mut self, message_id: &str) -> MqResult<()>;
 
     async fn ping(&mut self) -> MqResult<()>;
+}
+
+#[async_trait]
+pub trait MessageQueue {
+    async fn schedule_at<M: Into<MqMessageBytes> + Send>(
+        &mut self,
+        queue_name: &str,
+        message: M,
+        scheduled_at: DateTime,
+    ) -> MqResult<String>;
+
+    async fn schedule<M: Into<MqMessageBytes> + Send>(
+        &mut self,
+        queue_name: &str,
+        message: M,
+    ) -> MqResult<String> {
+        Ok(self.schedule_at(queue_name, message, Utc::now()).await?)
+    }
+
+    async fn schedule_in<M: Into<MqMessageBytes> + Send>(
+        &mut self,
+        queue_name: &str,
+        message: M,
+        schedule_in: Duration,
+    ) -> MqResult<String> {
+        Ok(self
+            .schedule_at(queue_name, message, Utc::now() + schedule_in)
+            .await?)
+    }
 }
 
 #[derive(thiserror::Error, Debug)]
