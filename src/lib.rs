@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 pub use async_trait::async_trait;
 pub use chrono::{DateTime, Duration, Utc};
+use fnv::FnvHashMap;
 
 const DEFAULT_QUEUE_NAME: &'static str = "default";
 
@@ -94,8 +97,94 @@ impl Producer for NullProducer {
     }
 }
 
-#[async_trait]
-pub trait Consumer {}
+pub struct ConsumerQueueOptions {
+    pub queue: String,
+    pub priority: i8,
+}
+
+impl ConsumerQueueOptions {
+    pub fn new<K>(queue: K, priority: i8) -> Self
+    where
+        K: Into<String>,
+    {
+        Self {
+            queue: queue.into(),
+            priority,
+        }
+    }
+
+    pub fn with_queue(mut self, queue: String) -> Self {
+        if queue.is_empty() {
+            self.queue = DEFAULT_QUEUE_NAME.into();
+        } else {
+            self.queue = queue;
+        }
+        self
+    }
+
+    pub fn with_priority(mut self, priority: i8) -> Self {
+        self.priority = priority;
+        self
+    }
+}
+
+impl Default for ConsumerQueueOptions {
+    fn default() -> Self {
+        ConsumerQueueOptions::new(DEFAULT_QUEUE_NAME, 1)
+    }
+}
+
+type JobRunner = dyn Fn(Job) -> MqResult<()> + Send + Sync;
+type BoxedJobRunner = Box<JobRunner>;
+
+pub trait Consumer {
+    fn register<K, H>(&mut self, kind: K, handler: H) -> &mut Self
+    where
+        K: Into<String>,
+        H: Fn(Job) -> MqResult<()> + Send + Sync + 'static;
+
+    fn run<I>(&mut self, queues: I) -> MqResult<()>
+    where
+        I: Iterator<Item = ConsumerQueueOptions>;
+}
+
+pub struct NullConsumer {
+    callbacks: FnvHashMap<String, BoxedJobRunner>,
+    workers: usize,
+}
+
+impl Default for NullConsumer {
+    fn default() -> Self {
+        Self {
+            callbacks: Default::default(),
+            workers: 1,
+        }
+    }
+}
+
+impl NullConsumer {
+    fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Consumer for NullConsumer {
+    fn register<K, H>(&mut self, kind: K, handler: H) -> &mut Self
+    where
+        K: Into<String>,
+        H: Fn(Job) -> MqResult<()> + Send + Sync + 'static,
+    {
+        self.callbacks.insert(kind.into(), Box::new(handler));
+        self
+    }
+
+    fn run<I>(&mut self, queues: I) -> MqResult<()>
+    where
+        I: Iterator<Item = ConsumerQueueOptions>,
+    {
+        loop {}
+    }
+}
 
 async fn hello() {
     let mut p = NullProducer::new();
@@ -105,57 +194,19 @@ async fn hello() {
         .schedule_immediate();
 
     p.enqueue(j1).await.unwrap();
-}
 
-#[async_trait]
-pub trait MqManagement {
-    async fn create_queue(&mut self, queue_name: &str) -> MqResult<()>;
-    async fn delete_queue(&mut self, queue_name: &str) -> MqResult<()>;
-}
+    let mut c = NullConsumer::new();
+    c.register("foo", |j| {
+        println!("foo: {}", j.id);
+        Ok(())
+    })
+    .register("bar", |j| {
+        println!("bar: {}", j.id);
+        Ok(())
+    });
 
-#[async_trait]
-pub trait MqConsumer {
-    // async fn dequeue<E: TryFrom<MqMessageBytes, Error = Vec<u8>>>(
-    //     &mut self,
-    //     queue_name: &str,
-    //     visiblity_timeout_in_ms: Option<u64>,
-    // ) -> MqResult<Option<MqMessage<E>>>;
-
-    async fn ack(&mut self, message_id: &str) -> MqResult<()>;
-
-    async fn nack(&mut self, message_id: &str) -> MqResult<()>;
-
-    async fn ping(&mut self) -> MqResult<()>;
-}
-
-#[async_trait]
-pub trait MessageQueue {
-    // async fn schedule_at<M: Into<MqMessageBytes> + Send>(
-    //     &mut self,
-    //     queue_name: &str,
-    //     message: M,
-    //     scheduled_at: DateTime<Utc>,
-    // ) -> MqResult<String>;
-
-    // async fn schedule<M: Into<MqMessageBytes> + Send>(
-    //     &mut self,
-    //     queue_name: &str,
-    //     message: M,
-    //     job_create_options: JobCreateOptions,
-    // ) -> MqResult<String> {
-    //     Ok(self.schedule_at(queue_name, message, Utc::now()).await?)
-    // }
-
-    // async fn schedule_in<M: Into<MqMessageBytes> + Send>(
-    //     &mut self,
-    //     queue_name: &str,
-    //     message: M,
-    //     schedule_in: Duration,
-    // ) -> MqResult<String> {
-    //     Ok(self
-    //         .schedule_at(queue_name, message, Utc::now() + schedule_in)
-    //         .await?)
-    // }
+    c.run([ConsumerQueueOptions::new("default", 1)].into_iter())
+        .unwrap();
 }
 
 #[derive(thiserror::Error, Debug)]
