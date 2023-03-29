@@ -2,6 +2,10 @@
 name = "mq-surreal"
 version = "0.4.0"
 edition = "2021"
+authors = ["Prabir Shrestha <mail@prabir.me>"]
+license = "MIT"
+description = "Simple Message Queue for SurrealDB"
+repository = "https://github.com/prabirshrestha/mq"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
