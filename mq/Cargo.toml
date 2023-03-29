@@ -1,0 +1,21 @@
+[package]
+name = "mq"
+version = "0.4.0"
+authors = ["Prabir Shrestha <mail@prabir.me>"]
+edition = "2021"
+license = "MIT"
+description = "Simple Message Queue"
+repository = "https://github.com/prabirshrestha/mq"
+
+[dependencies]
+async-trait = "0.1.51"
+futures = "0.3.27"
+serde = { version = "1.0.158", features = ["serde_derive"] }
+serde_json = "1.0.94"
+serde_with = "2.3.1"
+thiserror = "1.0.31"
+time = { version = "0.3.20", features = ["std", "serde", "parsing", "formatting"] }
+tokio = "1.26.0"
+tokio-util = "0.7.7"
+tracing = "0.1.37"
+xid = "1.0.3"

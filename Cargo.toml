@@ -1,16 +1,6 @@
-[package]
-name = "mq"
-version = "0.4.0"
-authors = ["Prabir Shrestha <mail@prabir.me>"]
-edition = "2021"
-license = "MIT"
-description = "Simple Message Queue"
-repository = "https://github.com/prabirshrestha/mq"
-
-[dependencies]
-async-trait = "0.1.51"
-thiserror = "1.0.31"
-
-[features]
-default = []
-blackhole-broker = []
+[workspace]
+members = [
+  "mq",
+  "mq-surreal",
+  "examples/simple"
+]

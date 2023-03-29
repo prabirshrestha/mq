@@ -1,1 +1,4 @@
 /target
+Cargo.lock
+data.db
+.DS_Store
