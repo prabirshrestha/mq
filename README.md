@@ -1,7 +1,7 @@
 mq
 ==
 
-Simple message queue library for [rust](https://www.rust-lang.org/).
+Generic simple message queue library for [rust](https://www.rust-lang.org/).
 
 Example
 =======
@@ -9,34 +9,18 @@ Example
 ## Cargo.toml
 ```toml
 [dependencies]
-mq = { version = "0.3.0", features = ["blackhole-broker"] }
-tokio = { version = "1.19.1", features = ["full"] }
+mq = { version = "0.3.0" }
+mq-surreal = { version = "0.3.0" }
+tokio = { version = "1.27.0", features = ["full"] }
 ```
+Refer to the examples on the usage.
 
-## main.rs
+# Supported Backends
 
-```rust
-use mq::{broker::blackhole::BlackholeMessageBroker, MessageQueue, MqResult};
+* SurrealDB (requires not released beta9. tested with 50ea5c52cb9e041b344b249c82f9c278f2ebf184)
 
-#[tokio::main]
-async fn main() -> MqResult<()> {
-    let mut mq = BlackholeMessageBroker::new();
+If you are interested in other backends feel free submit PR or features requests.
 
-    mq.create_queue("hello").await?;
+# LICENSE
 
-    mq.enqueue("hello", "some message").await?;
-
-    let msg = mq.dequeue::<String>("hello", None).await?;
-    match msg {
-        Some(msg) => {
-            println!("message id: {}", msg.id);
-            println!("message data: {}", msg.data);
-        }
-        None => println!("no message"),
-    }
-
-    mq.delete_queue("hello").await?;
-
-    Ok(())
-}
-```
+MIT

@@ -1,0 +1,19 @@
+[package]
+name = "simple"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.70"
+async-trait = "0.1.68"
+mq = { path = "../../mq", version = "0.4.0" }
+mq-surreal = { path = "../../mq-surreal", version = "0.4.0" }
+num_cpus = "1.15.0"
+serde_json = "1.0.94"
+surrealdb = { git = "https://github.com/surrealdb/surrealdb.git", features = ["kv-rocksdb"] }
+tokio = { version = "1.26.0", features = ["macros"] }
+tokio-util = "0.7.7"
+tracing = "0.1.37"
+tracing-subscriber = "0.3.16"
