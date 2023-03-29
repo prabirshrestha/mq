@@ -17,7 +17,7 @@ Refer to the examples on the usage.
 
 # Supported Backends
 
-* SurrealDB
+* SurrealDB (requires not released beta9. tested with 50ea5c52cb9e041b344b249c82f9c278f2ebf184)
 
 If you are interested in other backends feel free submit PR or features requests.
 
