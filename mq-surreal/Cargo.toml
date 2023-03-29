@@ -13,5 +13,5 @@ repository = "https://github.com/prabirshrestha/mq"
 async-trait = "0.1.68"
 mq = { "path" = "../mq", version = "0.4.0" }
 serde_json = "1.0.94"
-surrealdb = { git = "https://github.com/surrealdb/surrealdb.git" }
+surrealdb = { git = "https://github.com/surrealdb/surrealdb.git", rev = "39ed05b", version = "1.0.0-beta.8" }
 time = { version = "0.3.20", features = ["std", "serde"] }
