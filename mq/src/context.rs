@@ -1,9 +1,10 @@
 use std::time::Duration;
 
+use serde::de::DeserializeOwned;
 use serde_json::Value;
 use tokio_util::sync::CancellationToken;
 
-use crate::Job;
+use crate::{Error, Job};
 
 #[derive(Debug)]
 pub struct Context {
@@ -33,6 +34,13 @@ impl Context {
 
     pub fn payload(&self) -> &Value {
         self.job.payload()
+    }
+
+    pub fn deserialize<T>(self) -> Result<T, Error>
+    where
+        T: DeserializeOwned,
+    {
+        Ok(serde_json::from_value::<T>(self.job.payload)?)
     }
 
     pub fn error_reason(&self) -> &Option<Value> {

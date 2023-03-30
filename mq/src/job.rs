@@ -1,9 +1,11 @@
 use std::time::Duration;
 
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::{serde_as, DurationSeconds};
 use time::OffsetDateTime;
+
+use crate::Error;
 
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
@@ -15,7 +17,7 @@ pub struct Job {
     created_at: Option<OffsetDateTime>,
     #[serde(with = "time::serde::iso8601::option")]
     scheduled_at: Option<OffsetDateTime>,
-    payload: Value,
+    pub(crate) payload: Value,
     error_reason: Option<Value>,
     attempts: u16,
     max_attempts: u16,

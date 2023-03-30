@@ -3,8 +3,15 @@ use std::sync::Arc;
 use anyhow::Result;
 use mq::{Consumer, Context, Job, JobResult, Producer, Worker};
 use mq_surreal::{SurrealJobProcessor, SurrealProducer};
+use serde::Deserialize;
 use serde_json::json;
 use tokio_util::sync::CancellationToken;
+
+#[derive(Deserialize, Debug)]
+pub struct SendEmail {
+    to: String,
+    body: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -61,6 +68,8 @@ async fn main() -> Result<()> {
     let worker = Worker::new(
         Consumer::new().register(("send-email", |ctx: Context| async move {
             dbg!(&ctx);
+            let send_email: SendEmail = ctx.deserialize()?;
+            dbg!(&send_email);
             // Err(mq::Error::UnknownError("some error".into()))
             Ok(JobResult::CompleteWithSuccess)
         })),

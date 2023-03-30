@@ -11,6 +11,7 @@ async-trait = "0.1.68"
 mq = { path = "../../mq", version = "0.4.0" }
 mq-surreal = { path = "../../mq-surreal", version = "0.4.0" }
 num_cpus = "1.15.0"
+serde = { version = "1.0.159", features = ["serde_derive"] }
 serde_json = "1.0.94"
 surrealdb = { git = "https://github.com/surrealdb/surrealdb.git", rev = "50ea5c52cb9e041b344b249c82f9c278f2ebf184", features = ["kv-rocksdb"] }
 tokio = { version = "1.26.0", features = ["macros"] }
