@@ -57,6 +57,7 @@ impl Worker {
         let queues: Vec<&str> = self.consumer.handlers().keys().map(|k| &**k).collect();
 
         let ct = pin!(self.cancellation_token.cancelled().fuse());
+
         let job_stream = stream::unfold((interval, ct), |mut f| async {
             tokio::select! {
                  _ = (&mut f.0).tick() => Some((StreamSource::Polling, f)),
@@ -77,44 +78,51 @@ impl Worker {
         _source: StreamSource,
         job_processor: &T,
         queues: &[&str],
-    ) -> Result<bool, Error> {
-        match job_processor.poll_next_job(queues).await? {
-            Some(job) => {
-                // TODO: Probably want to filter via queues+kind instead of just queue. But for now
-                // using queues so it is compatible with other backends.
-                let handler = self
-                    .consumer
-                    .handlers()
-                    .get(job.queue())
-                    .unwrap()
-                    .get(job.kind())
-                    .unwrap();
+    ) -> Result<(), Error> {
+        loop {
+            match job_processor.poll_next_job(queues).await? {
+                Some(job) => {
+                    // TODO: Probably want to filter via queues+kind instead of just queue. But for now
+                    // using queues so it is compatible with other backends.
+                    let handler = self
+                        .consumer
+                        .handlers()
+                        .get(job.queue())
+                        .unwrap()
+                        .get(job.kind())
+                        .unwrap();
 
-                let id = job.id().to_string();
-                let ctx = Context::new(job, self.cancellation_token.clone());
+                    let id = job.id().to_string();
+                    let ctx = Context::new(job, self.cancellation_token.clone());
 
-                match handler.handle(ctx).await {
-                    Ok(result) => match result {
-                        crate::JobResult::CompleteWithSuccess => {
+                    match handler.handle(ctx).await {
+                        Ok(result) => match result {
+                            crate::JobResult::CompleteWithSuccess => {
+                                job_processor
+                                    .complete_job_with_success(handler.queue(), handler.kind(), &id)
+                                    .await?;
+                            }
+                        },
+                        Err(e) => {
                             job_processor
-                                .complete_job_with_success(handler.queue(), handler.kind(), &id)
+                                .fail_job(
+                                    handler.queue(),
+                                    handler.kind(),
+                                    &id,
+                                    json!(e.to_string()),
+                                )
                                 .await?;
                         }
-                    },
-                    Err(e) => {
-                        job_processor
-                            .fail_job(handler.queue(), handler.kind(), &id, json!(e.to_string()))
-                            .await?;
                     }
                 }
-
-                Ok(true)
-            }
-            None => {
-                debug!("No new jobs found");
-                Ok(false)
+                None => {
+                    debug!("No new jobs found");
+                    break;
+                }
             }
         }
+
+        Ok(())
     }
 }
 
