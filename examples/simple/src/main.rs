@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
         Consumer::new().register(("send-email", |ctx: Context| async move {
             dbg!(&ctx);
             let send_email: SendEmail = ctx.deserialize()?;
-            dbg!(&send_email);
+            dbg!(send_email.to, send_email.body);
             // Err(mq::Error::UnknownError("some error".into()))
             Ok(JobResult::CompleteWithSuccess)
         })),
