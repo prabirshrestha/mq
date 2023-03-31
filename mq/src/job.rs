@@ -1,11 +1,9 @@
 use std::time::Duration;
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::{serde_as, DurationSeconds};
 use time::OffsetDateTime;
-
-use crate::Error;
 
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
