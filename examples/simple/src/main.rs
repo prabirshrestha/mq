@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
 
     // create table schema for mq
     db.query(format!(
-        r#"REMOVE TABLE {table};
+        r#"
     DEFINE TABLE {table} SCHEMAFULL;
     DEFINE FIELD created_at     ON {table} TYPE datetime    ASSERT $value != NONE;
     DEFINE FIELD scheduled_at   ON {table} TYPE datetime    ASSERT $value != NONE;
