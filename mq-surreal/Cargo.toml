@@ -6,6 +6,7 @@ authors = ["Prabir Shrestha <mail@prabir.me>"]
 license = "MIT"
 description = "Simple Message Queue for SurrealDB"
 repository = "https://github.com/prabirshrestha/mq"
+keywords = ["job", "scheduler", "queue"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

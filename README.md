@@ -9,10 +9,12 @@ Example
 ## Cargo.toml
 ```toml
 [dependencies]
-mq = { version = "0.3.0" }
-mq-surreal = { version = "0.3.0" }
+mq = { version = "0.4.1" }
+# mq-surreal depends on surrealdb unreleased beta9 which is not published yet.
+mq-surreal = { git = "https://github.com/prabirshrestha/mq.git", tag = "v0.4.1" }
 tokio = { version = "1.27.0", features = ["full"] }
 ```
+
 Refer to the examples on the usage.
 
 # Supported Backends

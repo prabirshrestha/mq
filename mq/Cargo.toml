@@ -6,6 +6,7 @@ edition = "2021"
 license = "MIT"
 description = "Simple Message Queue"
 repository = "https://github.com/prabirshrestha/mq"
+keywords = ["job", "scheduler", "queue"]
 
 [dependencies]
 async-trait = "0.1.51"
