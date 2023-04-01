@@ -7,10 +7,10 @@ Example
 =======
 
 ## Cargo.toml
+
 ```toml
 [dependencies]
 mq = "0.4.3"
-# mq-surreal depends on surrealdb unreleased beta9 which is not published yet.
 mq-surreal = "v0.4.3"
 tokio = { version = "1.27.0", features = ["full"] }
 ```
