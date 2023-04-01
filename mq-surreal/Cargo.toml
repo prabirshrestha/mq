@@ -1,6 +1,6 @@
 [package]
 name = "mq-surreal"
-version = "0.4.2"
+version = "0.4.3"
 edition = "2021"
 authors = ["Prabir Shrestha <mail@prabir.me>"]
 license = "MIT"
@@ -12,7 +12,7 @@ keywords = ["job", "scheduler", "queue"]
 
 [dependencies]
 async-trait = "0.1.68"
-mq = { "path" = "../mq", version = "0.4.2" }
+mq = { "path" = "../mq", version = "0.4.3" }
 serde_json = "1.0.94"
-surrealdb = { git = "https://github.com/surrealdb/surrealdb.git", rev = "50ea5c52cb9e041b344b249c82f9c278f2ebf184" }
+surrealdb = "1.0.0-beta.9"
 time = { version = "0.3.20", features = ["std", "serde"] }
