@@ -97,6 +97,7 @@ impl JobProcessor for SurrealJobProcessor {
             UPDATE type::thing($table, $id)
             SET
                 locked_at=null,
+                attempts=attempts+1,
                 error_reason=$error_reason
             WHERE
                 queue=$queue AND kind=$kind

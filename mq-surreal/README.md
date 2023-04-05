@@ -17,3 +17,5 @@ DEFINE FIELD lease_time     ON queue TYPE number      ASSERT $value != NONE;
 DEFINE FIELD payload        ON queue FLEXIBLE TYPE object;
 DEFINE FIELD error_reason   ON queue FLEXIBLE TYPE object;
 ```
+
+Requires SurrealDB v1.0.0-beta9+
