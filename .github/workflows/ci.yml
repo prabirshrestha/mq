@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+      branches:
+      - main
+  push:
+    branches:
+      - main
+      - ci/*
+    tags:
+      - 'v0.[0-9]+.[0-9]+'
+      - 'v0.[0-9]+.[0-9]+-beta.[0-9]+'
+      - 'v0.[0-9]+.[0-9]+-alpha.[0-9]+'
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        name: [ubuntu]
+        include:
+          - name: ubuntu
+            os: ubuntu-latest
+    runs-on: ${{matrix.os}}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+        components: rustfmt, clippy
+    - name: Set up cargo cache
+      uses: actions/cache@v3
+      continue-on-error: false
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/            
+        key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: ${{ matrix.os }}-cargo-
+    - name: rust fmt
+      run: cargo fmt --all -- --check
+    - name: cargo clippy
+      run: cargo clippy -- -D warnings
+    - name: Install cargo check tools
+      run: |
+        cargo install --locked cargo-deny || true
+        cargo install --locked cargo-outdated || true
+        cargo install --locked cargo-udeps || true
+        cargo install --locked cargo-audit || true
+        cargo install --locked cargo-pants || true
+    - name: Check
+      run: |
+        cargo deny check
+        cargo outdated --exit-code 1
+        cargo udeps
+        rm -rf ~/.cargo/advisory-db
+        cargo audit
+        cargo pants
+    - name: Build
+      run: cargo build
