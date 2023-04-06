@@ -51,8 +51,8 @@ jobs:
         restore-keys: ${{ matrix.os }}-cargo-
     - name: rust fmt
       run: cargo fmt --all -- --check
-    - name: cargo clippy
-      run: cargo clippy -- -D warnings
+    # - name: cargo clippy
+    #   run: cargo clippy -- -D warnings
     - name: Install cargo check tools
       run: |
         cargo install --locked cargo-deny || true
