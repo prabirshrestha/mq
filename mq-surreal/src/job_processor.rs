@@ -43,7 +43,7 @@ impl JobProcessor for SurrealJobProcessor {
                             )
                         )
                         AND queue IN $queues
-                    ORDER by updated_at ASC
+                    ORDER by priority DESC, updated_at ASC
                     LIMIT 1
                 )
             )

@@ -35,6 +35,7 @@ impl Producer for SurrealProducer {
                     payload=$payload,
                     attempts=$attempts,
                     max_attempts=$max_attempts,
+                    priority=$priority,
                     lease_time=$lease_time,
                     error_reason=null"#,
             )
@@ -51,6 +52,7 @@ impl Producer for SurrealProducer {
             ))
             .bind(("attempts", job.attempts()))
             .bind(("max_attempts", job.max_attempts()))
+            .bind(("priority", job.priority()))
             .bind(("lease_time", job.lease_time().as_secs()))
             .await
             .map_err(convert_surrealdb_error)?

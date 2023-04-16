@@ -41,6 +41,7 @@ async fn main() -> Result<()> {
     DEFINE FIELD kind           ON {table} TYPE string      ASSERT $value != NONE;
     DEFINE FIELD max_attempts   ON {table} TYPE number      ASSERT $value != NONE;
     DEFINE FIELD attempts       ON {table} TYPE number      ASSERT $value != NONE;
+    DEFINE FIELD priority       ON {table} TYPE number      ASSERT $value != NONE;
     DEFINE FIELD lease_time     ON {table} TYPE number      ASSERT $value != NONE;
     DEFINE FIELD payload        ON {table} FLEXIBLE TYPE object;
     DEFINE FIELD error_reason   ON {table} FLEXIBLE TYPE object;
