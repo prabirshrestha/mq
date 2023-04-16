@@ -23,6 +23,7 @@ pub struct Job {
     max_attempts: u16,
     #[serde_as(as = "DurationSeconds<u64>")]
     lease_time: Duration,
+    priority: u8,
 }
 
 impl Job {
@@ -43,6 +44,7 @@ impl Job {
             attempts: 0,
             max_attempts: 3,
             lease_time: Duration::from_secs(30),
+            priority: 0,
         }
     }
 
@@ -138,5 +140,14 @@ impl Job {
 
     pub fn error_reason(&self) -> &Option<Value> {
         &self.error_reason
+    }
+
+    pub fn priority(&self) -> u8 {
+        self.priority
+    }
+
+    pub fn with_priority(mut self, priority: u8) -> Self {
+        self.priority = priority;
+        self
     }
 }
