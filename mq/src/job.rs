@@ -23,6 +23,7 @@ pub struct Job {
     max_attempts: u16,
     #[serde_as(as = "DurationSeconds<u64>")]
     lease_time: Duration,
+    /// Higher priority will get polled first.
     priority: u8,
 }
 
