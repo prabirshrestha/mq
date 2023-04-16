@@ -27,7 +27,8 @@ impl Producer for SurrealProducer {
         self.db
             .query(
                 r#"CREATE type::thing($table, $id)
-                SET created_at=$created_at,
+                SET created_at=$now,
+                    updated_at=$now,
                     scheduled_at=$scheduled_at,
                     queue=$queue,
                     kind=$kind,
@@ -42,7 +43,7 @@ impl Producer for SurrealProducer {
             .bind(("queue", job.queue()))
             .bind(("kind", job.kind()))
             .bind(("payload", job.payload()))
-            .bind(("created_at", OffsetDateTime::now_utc()))
+            .bind(("now", OffsetDateTime::now_utc()))
             .bind((
                 "scheduled_at",
                 job.scheduled_at()

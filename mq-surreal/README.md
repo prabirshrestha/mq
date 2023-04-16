@@ -7,6 +7,7 @@
 ```sql
 DEFINE TABLE queue SCHEMAFULL;
 DEFINE FIELD created_at     ON queue TYPE datetime    ASSERT $value != NONE;
+DEFINE FIELD updated_at     ON queue TYPE datetime    ASSERT $value != NONE;
 DEFINE FIELD scheduled_at   ON queue TYPE datetime    ASSERT $value != NONE;
 DEFINE FIELD locked_at      ON queue TYPE datetime;
 DEFINE FIELD queue          ON queue TYPE string      ASSERT $value != NONE;
