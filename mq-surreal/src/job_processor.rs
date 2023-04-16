@@ -43,12 +43,13 @@ impl JobProcessor for SurrealJobProcessor {
                             )
                         )
                         AND queue IN $queues
-                    ORDER by created_at
+                    ORDER by updated_at ASC
                     LIMIT 1
                 )
             )
             SET
-                locked_at=$now
+                locked_at=$now,
+                updated_at=$now
             RETURN
                 meta::id(id) as id,
                 *"#,
@@ -97,6 +98,7 @@ impl JobProcessor for SurrealJobProcessor {
             UPDATE type::thing($table, $id)
             SET
                 locked_at=null,
+                updated_at=$now,
                 attempts=attempts+1,
                 error_reason=$error_reason
             WHERE
@@ -108,6 +110,7 @@ impl JobProcessor for SurrealJobProcessor {
             .bind(("queue", queue))
             .bind(("kind", kind))
             .bind(("error_reason", reason))
+            .bind(("now", OffsetDateTime::now_utc()))
             .await
             .map_err(convert_surrealdb_error)?
             .check()

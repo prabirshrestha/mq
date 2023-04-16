@@ -14,6 +14,8 @@ pub struct Job {
     #[serde(with = "time::serde::iso8601::option")]
     created_at: Option<OffsetDateTime>,
     #[serde(with = "time::serde::iso8601::option")]
+    updated_at: Option<OffsetDateTime>,
+    #[serde(with = "time::serde::iso8601::option")]
     scheduled_at: Option<OffsetDateTime>,
     pub(crate) payload: Value,
     error_reason: Option<Value>,
@@ -36,6 +38,7 @@ impl Job {
             payload: payload.into(),
             error_reason: None,
             created_at: None,
+            updated_at: None,
             scheduled_at: None,
             attempts: 0,
             max_attempts: 3,
@@ -72,6 +75,10 @@ impl Job {
 
     pub fn created_at(&self) -> &Option<OffsetDateTime> {
         &self.created_at
+    }
+
+    pub fn updated_at(&self) -> &Option<OffsetDateTime> {
+        &self.updated_at
     }
 
     pub fn payload(&self) -> &Value {
