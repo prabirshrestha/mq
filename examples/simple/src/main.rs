@@ -35,6 +35,7 @@ async fn main() -> Result<()> {
         r#"
     DEFINE TABLE {table} SCHEMAFULL;
     DEFINE FIELD created_at     ON {table} TYPE datetime    ASSERT $value != NONE;
+    DEFINE FIELD updated_at     ON {table} TYPE datetime    ASSERT $value != NONE;
     DEFINE FIELD scheduled_at   ON {table} TYPE datetime    ASSERT $value != NONE;
     DEFINE FIELD locked_at      ON {table} TYPE datetime;
     DEFINE FIELD queue          ON {table} TYPE string      ASSERT $value != NONE;
@@ -42,6 +43,7 @@ async fn main() -> Result<()> {
     DEFINE FIELD max_attempts   ON {table} TYPE number      ASSERT $value != NONE;
     DEFINE FIELD attempts       ON {table} TYPE number      ASSERT $value != NONE;
     DEFINE FIELD priority       ON {table} TYPE number      ASSERT $value != NONE;
+    DEFINE FIELD unique_key     ON {table} TYPE string;
     DEFINE FIELD lease_time     ON {table} TYPE number      ASSERT $value != NONE;
     DEFINE FIELD payload        ON {table} FLEXIBLE TYPE object;
     DEFINE FIELD error_reason   ON {table} FLEXIBLE TYPE object;
@@ -68,7 +70,6 @@ async fn main() -> Result<()> {
     let cancellation_token = CancellationToken::new();
     let worker = Worker::new(
         Consumer::new().register(("send-email", |ctx: Context| async move {
-            dbg!(&ctx);
             let send_email: SendEmail = ctx.deserialize()?;
             dbg!(send_email.to, send_email.body);
             // Err(mq::Error::UnknownError("some error".into()))

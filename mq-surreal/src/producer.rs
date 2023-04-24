@@ -26,18 +26,40 @@ impl Producer for SurrealProducer {
     async fn publish(&self, job: Job) -> Result<(), Error> {
         self.db
             .query(
-                r#"CREATE type::thing($table, $id)
-                SET created_at=$now,
-                    updated_at=$now,
-                    scheduled_at=$scheduled_at,
-                    queue=$queue,
-                    kind=$kind,
-                    payload=$payload,
-                    attempts=$attempts,
-                    max_attempts=$max_attempts,
-                    priority=$priority,
-                    lease_time=$lease_time,
-                    error_reason=null"#,
+                r#"
+                BEGIN TRANSACTION;
+
+                LET $allow = IF $unique_key == NONE THEN
+                    true
+                ELSE
+                    count((
+                        SELECT * FROM queue
+                        WHERE
+                            queue=$queue
+                            AND kind=$kind
+                            AND unique_key=$unique_key
+                            AND attempts<max_attempts
+                    )) == 0
+                END;
+
+                IF $allow THEN
+                    CREATE type::thing($table, $id)
+                    SET created_at=$now,
+                        updated_at=$now,
+                        scheduled_at=$scheduled_at,
+                        queue=$queue,
+                        kind=$kind,
+                        payload=$payload,
+                        attempts=$attempts,
+                        max_attempts=$max_attempts,
+                        priority=$priority,
+                        unique_key=$unique_key,
+                        lease_time=$lease_time,
+                        error_reason=null;
+                END;
+
+                COMMIT TRANSACTION;
+                "#,
             )
             .bind(("table", &self.table))
             .bind(("id", job.id()))
@@ -45,6 +67,7 @@ impl Producer for SurrealProducer {
             .bind(("kind", job.kind()))
             .bind(("payload", job.payload()))
             .bind(("now", OffsetDateTime::now_utc()))
+            .bind(("unique_key", job.unique_key()))
             .bind((
                 "scheduled_at",
                 job.scheduled_at()
