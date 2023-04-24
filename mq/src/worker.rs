@@ -129,5 +129,4 @@ impl Worker {
 #[derive(Debug)]
 enum StreamSource {
     Polling,
-    Listener,
 }

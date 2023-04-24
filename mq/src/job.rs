@@ -25,6 +25,7 @@ pub struct Job {
     lease_time: Duration,
     /// Higher priority will get polled first.
     priority: u8,
+    unique_key: Option<String>,
 }
 
 impl Job {
@@ -46,6 +47,7 @@ impl Job {
             max_attempts: 3,
             lease_time: Duration::from_secs(30),
             priority: 0,
+            unique_key: None,
         }
     }
 
@@ -149,6 +151,15 @@ impl Job {
 
     pub fn with_priority(mut self, priority: u8) -> Self {
         self.priority = priority;
+        self
+    }
+
+    pub fn unique_key(&self) -> &Option<String> {
+        &self.unique_key
+    }
+
+    pub fn with_unique_key(mut self, unique_key: Option<String>) -> Self {
+        self.unique_key = unique_key;
         self
     }
 }
