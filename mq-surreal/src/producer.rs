@@ -47,6 +47,7 @@ impl Producer for SurrealProducer {
                     SET created_at=$now,
                         updated_at=$now,
                         scheduled_at=$scheduled_at,
+                        locked_at=null,
                         queue=$queue,
                         kind=$kind,
                         payload=$payload,
