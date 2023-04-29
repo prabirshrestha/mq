@@ -4,7 +4,7 @@ use crate::{Consumer, Context, Error, JobProcessor};
 use futures::{stream, FutureExt, StreamExt, TryStreamExt};
 use serde_json::json;
 use tokio_util::sync::CancellationToken;
-use tracing::debug;
+use tracing::{debug, error};
 
 pub struct Worker {
     consumer: Consumer,
@@ -104,6 +104,13 @@ impl Worker {
                             }
                         },
                         Err(e) => {
+                            error!(
+                                "Job queue={}, kind={}, id={} failed with {:?}",
+                                handler.queue(),
+                                handler.kind(),
+                                &id,
+                                &e
+                            );
                             job_processor
                                 .fail_job(
                                     handler.queue(),

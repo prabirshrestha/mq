@@ -48,6 +48,7 @@ impl JobProcessor for SurrealJobProcessor {
                 )
             )
             SET
+                attempts=attempts+1,
                 locked_at=$now,
                 updated_at=$now
             RETURN
@@ -99,7 +100,6 @@ impl JobProcessor for SurrealJobProcessor {
             SET
                 locked_at=null,
                 updated_at=$now,
-                attempts=attempts+1,
                 error_reason=$error_reason
             WHERE
                 queue=$queue AND kind=$kind
