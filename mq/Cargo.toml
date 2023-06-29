@@ -16,7 +16,7 @@ serde_json = "1.0.97"
 serde_with = "3.0.0"
 thiserror = "1.0.40"
 time = { version = "0.3.22", features = ["std", "serde", "parsing", "formatting"] }
-tokio = { version = "1.28.2", features = ["macros", "time"] }
+tokio = { version = "1.29.1", features = ["macros", "time"] }
 tokio-util = "0.7.8"
 tracing = "0.1.37"
 xid = "1.0.3"
