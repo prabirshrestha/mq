@@ -11,7 +11,7 @@ keywords = ["job", "scheduler", "queue"]
 [dependencies]
 async-trait = "0.1.71"
 futures = "0.3.28"
-serde = { version = "1.0.167", features = ["serde_derive"] }
+serde = { version = "1.0.168", features = ["serde_derive"] }
 serde_json = "1.0.100"
 serde_with = "3.0.0"
 thiserror = "1.0.43"
