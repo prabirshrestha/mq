@@ -13,7 +13,7 @@ async-trait = "0.1.72"
 futures = "0.3.28"
 serde = { version = "1.0.181", features = ["serde_derive"] }
 serde_json = "1.0.104"
-serde_with = "3.1.0"
+serde_with = "3.2.0"
 thiserror = "1.0.44"
 time = { version = "0.3.25", features = ["std", "serde", "parsing", "formatting"] }
 tokio = { version = "1.29.1", features = ["macros", "time"] }
