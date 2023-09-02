@@ -19,7 +19,14 @@ async fn main() -> Result<()> {
 
     // connect to surrealdb
     let db = Arc::new(
-        surrealdb::engine::any::connect(("file://./data.db", surrealdb::opt::Strict)).await?,
+        surrealdb::engine::any::connect((
+            format!(
+                "file://{}/data.db",
+                std::env::current_dir().unwrap().to_string_lossy()
+            ),
+            surrealdb::opt::Config::new().set_strict(true),
+        ))
+        .await?,
     );
 
     // create surrealdb namespace and db
