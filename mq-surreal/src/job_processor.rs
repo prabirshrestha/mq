@@ -1,10 +1,10 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use async_trait::async_trait;
 use mq::{Error, Job, JobProcessor};
 use serde_json::Value;
-use surrealdb::{engine::any::Any, Surreal};
-use time::OffsetDateTime;
+use surrealdb::{engine::any::Any, sql::Datetime, Surreal};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 use crate::error::convert_surrealdb_error;
 
@@ -37,7 +37,7 @@ impl JobProcessor for SurrealJobProcessor {
                         attempts<max_attempts
                         AND scheduled_at<=$now
                         AND (
-                            locked_at=null
+                            locked_at=NONE
                             OR (
                                 time::unix(locked_at)<time::unix($now)-lease_time
                             )
@@ -57,7 +57,10 @@ impl JobProcessor for SurrealJobProcessor {
             )
             .bind(("table", &self.table))
             .bind(("queues", queues))
-            .bind(("now", OffsetDateTime::now_utc()))
+            .bind((
+                "now",
+                Datetime::from_str(&OffsetDateTime::now_utc().format(&Rfc3339).unwrap()).unwrap(),
+            ))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
@@ -98,7 +101,7 @@ impl JobProcessor for SurrealJobProcessor {
                 r#"
             UPDATE type::thing($table, $id)
             SET
-                locked_at=null,
+                locked_at=NONE,
                 updated_at=$now,
                 error_reason=$error_reason
             WHERE
@@ -110,7 +113,10 @@ impl JobProcessor for SurrealJobProcessor {
             .bind(("queue", queue))
             .bind(("kind", kind))
             .bind(("error_reason", reason))
-            .bind(("now", OffsetDateTime::now_utc()))
+            .bind((
+                "now",
+                Datetime::from_str(&OffsetDateTime::now_utc().format(&Rfc3339).unwrap()).unwrap(),
+            ))
             .await
             .map_err(convert_surrealdb_error)?
             .check()

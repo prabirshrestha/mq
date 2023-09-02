@@ -116,7 +116,7 @@ impl Worker {
                                     handler.queue(),
                                     handler.kind(),
                                     &id,
-                                    json!(e.to_string()),
+                                    json!({ "error": e.to_string() }),
                                 )
                                 .await?;
                         }

@@ -1,9 +1,9 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use async_trait::async_trait;
 use mq::{Error, Job, Producer};
-use surrealdb::{engine::any::Any, Surreal};
-use time::OffsetDateTime;
+use surrealdb::{engine::any::Any, sql::Datetime, Surreal};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 use crate::error::convert_surrealdb_error;
 
@@ -24,6 +24,8 @@ impl SurrealProducer {
 #[async_trait]
 impl Producer for SurrealProducer {
     async fn publish(&self, job: Job) -> Result<(), Error> {
+        let now = Datetime::from_str(&OffsetDateTime::now_utc().format(&Rfc3339).unwrap()).unwrap();
+
         self.db
             .query(
                 r#"
@@ -47,7 +49,7 @@ impl Producer for SurrealProducer {
                     SET created_at=$now,
                         updated_at=$now,
                         scheduled_at=$scheduled_at,
-                        locked_at=null,
+                        locked_at=NONE,
                         queue=$queue,
                         kind=$kind,
                         payload=$payload,
@@ -56,7 +58,7 @@ impl Producer for SurrealProducer {
                         priority=$priority,
                         unique_key=$unique_key,
                         lease_time=$lease_time,
-                        error_reason=null;
+                        error_reason=NONE;
                 END;
 
                 COMMIT TRANSACTION;
@@ -67,12 +69,17 @@ impl Producer for SurrealProducer {
             .bind(("queue", job.queue()))
             .bind(("kind", job.kind()))
             .bind(("payload", job.payload()))
-            .bind(("now", OffsetDateTime::now_utc()))
+            .bind(("now", now))
             .bind(("unique_key", job.unique_key()))
             .bind((
                 "scheduled_at",
-                job.scheduled_at()
-                    .unwrap_or_else(|| (OffsetDateTime::now_utc())),
+                Datetime::from_str(
+                    &job.scheduled_at()
+                        .unwrap_or_else(|| (OffsetDateTime::now_utc()))
+                        .format(&Rfc3339)
+                        .unwrap(),
+                )
+                .unwrap(),
             ))
             .bind(("attempts", job.attempts()))
             .bind(("max_attempts", job.max_attempts()))
