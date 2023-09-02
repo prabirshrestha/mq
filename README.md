@@ -10,8 +10,8 @@ Example
 
 ```toml
 [dependencies]
-mq = "0.4.8"
-mq-surreal = "v0.4.8"
+mq = "0.5.0"
+mq-surreal = "0.5.0"
 tokio = { version = "1.27.0", features = ["full"] }
 ```
 
