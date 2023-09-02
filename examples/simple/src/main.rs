@@ -5,6 +5,7 @@ use mq::{Consumer, Context, Job, JobResult, Producer, Worker};
 use mq_surreal::{SurrealJobProcessor, SurrealProducer};
 use serde::Deserialize;
 use serde_json::json;
+use surrealdb::dbs::Capabilities;
 use tokio_util::sync::CancellationToken;
 
 #[derive(Deserialize, Debug)]
@@ -24,7 +25,9 @@ async fn main() -> Result<()> {
                 "file://{}/data.db",
                 std::env::current_dir().unwrap().to_string_lossy()
             ),
-            surrealdb::opt::Config::new().set_strict(true),
+            surrealdb::opt::Config::new()
+                .set_strict(true)
+                .capabilities(Capabilities::all()),
         ))
         .await?,
     );
@@ -40,20 +43,20 @@ async fn main() -> Result<()> {
     // create table schema for mq
     db.query(format!(
         r#"
-    DEFINE TABLE {table} SCHEMAFULL;
-    DEFINE FIELD created_at     ON {table} TYPE datetime    ASSERT $value != NONE;
-    DEFINE FIELD updated_at     ON {table} TYPE datetime    ASSERT $value != NONE;
-    DEFINE FIELD scheduled_at   ON {table} TYPE datetime    ASSERT $value != NONE;
-    DEFINE FIELD locked_at      ON {table} TYPE datetime;
-    DEFINE FIELD queue          ON {table} TYPE string      ASSERT $value != NONE;
-    DEFINE FIELD kind           ON {table} TYPE string      ASSERT $value != NONE;
-    DEFINE FIELD max_attempts   ON {table} TYPE number      ASSERT $value != NONE;
-    DEFINE FIELD attempts       ON {table} TYPE number      ASSERT $value != NONE;
-    DEFINE FIELD priority       ON {table} TYPE number      ASSERT $value != NONE;
-    DEFINE FIELD unique_key     ON {table} TYPE string;
-    DEFINE FIELD lease_time     ON {table} TYPE number      ASSERT $value != NONE;
-    DEFINE FIELD payload        ON {table} FLEXIBLE TYPE object;
-    DEFINE FIELD error_reason   ON {table} FLEXIBLE TYPE object;
+DEFINE TABLE {table} SCHEMAFULL;
+DEFINE FIELD created_at     ON {table} TYPE datetime;
+DEFINE FIELD updated_at     ON {table} TYPE datetime;
+DEFINE FIELD scheduled_at   ON {table} TYPE datetime;
+DEFINE FIELD locked_at      ON {table} TYPE option<datetime>;
+DEFINE FIELD queue          ON {table} TYPE string;
+DEFINE FIELD kind           ON {table} TYPE string;
+DEFINE FIELD max_attempts   ON {table} TYPE number;
+DEFINE FIELD attempts       ON {table} TYPE number;
+DEFINE FIELD priority       ON {table} TYPE number;
+DEFINE FIELD unique_key     ON {table} TYPE option<string>;
+DEFINE FIELD lease_time     ON {table} TYPE number;
+DEFINE FIELD payload        ON {table} FLEXIBLE TYPE object;
+DEFINE FIELD error_reason   ON {table} FLEXIBLE TYPE option<object>;
     "#
     ))
     .await?
