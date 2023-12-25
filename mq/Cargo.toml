@@ -14,7 +14,7 @@ futures = "0.3.30"
 serde = { version = "1.0.193", features = ["serde_derive"] }
 serde_json = "1.0.107"
 serde_with = "3.4.0"
-thiserror = "1.0.51"
+thiserror = "1.0.52"
 time = { version = "0.3.31", features = ["std", "serde", "parsing", "formatting"] }
 tokio = { version = "1.35.1", features = ["macros", "time"] }
 tokio-util = "0.7.10"
