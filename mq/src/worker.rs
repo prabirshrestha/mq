@@ -102,6 +102,16 @@ impl Worker {
                                     .complete_job_with_success(handler.queue(), handler.kind(), &id)
                                     .await?;
                             }
+                            crate::JobResult::CompleteWithCancelled(message) => {
+                                job_processor
+                                    .complete_job_with_cancelled(
+                                        handler.queue(),
+                                        handler.kind(),
+                                        &id,
+                                        message,
+                                    )
+                                    .await?;
+                            }
                         },
                         Err(e) => {
                             error!(

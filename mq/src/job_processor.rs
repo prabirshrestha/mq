@@ -19,6 +19,15 @@ pub trait JobProcessor: Send + Sync {
         id: &str,
     ) -> Result<(), Error>;
 
+    /// Complete the job with cancel.
+    async fn complete_job_with_cancelled(
+        &self,
+        queue: &str,
+        kind: &str,
+        id: &str,
+        message: Option<String>,
+    ) -> Result<(), Error>;
+
     /// Fail the job.
     async fn fail_job(&self, queue: &str, kind: &str, id: &str, reason: Value)
         -> Result<(), Error>;

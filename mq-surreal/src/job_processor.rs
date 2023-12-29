@@ -89,6 +89,27 @@ impl JobProcessor for SurrealJobProcessor {
         Ok(())
     }
 
+    async fn complete_job_with_cancelled(
+        &self,
+        queue: &str,
+        kind: &str,
+        id: &str,
+        _message: Option<String>,
+    ) -> Result<(), Error> {
+        self.db
+            .query(r#"DELETE type::thing($table, $id) WHERE queue=$queue AND kind=$kind"#)
+            .bind(("table", &self.table))
+            .bind(("id", id))
+            .bind(("queue", queue))
+            .bind(("kind", kind))
+            .await
+            .map_err(convert_surrealdb_error)?
+            .check()
+            .map_err(convert_surrealdb_error)?;
+
+        Ok(())
+    }
+
     async fn fail_job(
         &self,
         queue: &str,
