@@ -92,4 +92,40 @@ impl Producer for SurrealProducer {
 
         Ok(())
     }
+
+    async fn exists(&self, queue: &str, kind: &str, id: &str) -> Result<bool, Error> {
+        let mut result = self
+            .db
+            .query("SELECT meta::id(id) as id, queue, kind FROM type::thing($table, $id) WHERE queue=$queue AND kind=$kind;")
+            .bind(("table", &self.table))
+            .bind(("id", id))
+            .bind(("queue", queue))
+            .bind(("kind", kind))
+            .await
+            .map_err(convert_surrealdb_error)?
+            .check()
+            .map_err(convert_surrealdb_error)?;
+
+        let query_result: Vec<String> = result.take("id").map_err(convert_surrealdb_error)?;
+        if query_result.len() == 1 {
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
+    async fn cancel(&self, queue: &str, kind: &str, id: &str) -> Result<(), Error> {
+        self.db
+            .query(r#"DELETE type::thing($table, $id) WHERE queue=$queue AND kind=$kind"#)
+            .bind(("table", &self.table))
+            .bind(("id", id))
+            .bind(("queue", queue))
+            .bind(("kind", kind))
+            .await
+            .map_err(convert_surrealdb_error)?
+            .check()
+            .map_err(convert_surrealdb_error)?;
+
+        Ok(())
+    }
 }

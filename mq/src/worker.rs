@@ -4,7 +4,7 @@ use crate::{Consumer, Context, Error, JobProcessor};
 use futures::{stream, FutureExt, StreamExt, TryStreamExt};
 use serde_json::json;
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, error};
+use tracing::{debug, error, warn};
 
 pub struct Worker {
     consumer: Consumer,
@@ -89,46 +89,60 @@ impl Worker {
                         .handlers()
                         .get(job.queue())
                         .unwrap()
-                        .get(job.kind())
-                        .unwrap();
+                        .get(job.kind());
 
-                    let id = job.id().to_string();
-                    let ctx = Context::new(job, self.cancellation_token.clone());
+                    match handler {
+                        Some(handler) => {
+                            let id = job.id().to_string();
+                            let ctx = Context::new(job, self.cancellation_token.clone());
 
-                    match handler.handle(ctx).await {
-                        Ok(result) => match result {
-                            crate::JobResult::CompleteWithSuccess => {
-                                job_processor
-                                    .complete_job_with_success(handler.queue(), handler.kind(), &id)
-                                    .await?;
-                            }
-                            crate::JobResult::CompleteWithCancelled(message) => {
-                                job_processor
-                                    .complete_job_with_cancelled(
+                            match handler.handle(ctx).await {
+                                Ok(result) => match result {
+                                    crate::JobResult::CompleteWithSuccess => {
+                                        job_processor
+                                            .complete_job_with_success(
+                                                handler.queue(),
+                                                handler.kind(),
+                                                &id,
+                                            )
+                                            .await?;
+                                    }
+                                    crate::JobResult::CompleteWithCancelled(message) => {
+                                        job_processor
+                                            .complete_job_with_cancelled(
+                                                handler.queue(),
+                                                handler.kind(),
+                                                &id,
+                                                message,
+                                            )
+                                            .await?;
+                                    }
+                                },
+                                Err(e) => {
+                                    error!(
+                                        "Job queue={}, kind={}, id={} failed with {:?}",
                                         handler.queue(),
                                         handler.kind(),
                                         &id,
-                                        message,
-                                    )
-                                    .await?;
+                                        &e
+                                    );
+                                    job_processor
+                                        .fail_job(
+                                            handler.queue(),
+                                            handler.kind(),
+                                            &id,
+                                            json!({ "error": e.to_string() }),
+                                        )
+                                        .await?;
+                                }
                             }
-                        },
-                        Err(e) => {
-                            error!(
-                                "Job queue={}, kind={}, id={} failed with {:?}",
-                                handler.queue(),
-                                handler.kind(),
-                                &id,
-                                &e
+                        }
+                        None => {
+                            warn!(
+                                "handler not registered. queue={} kind={}",
+                                job.queue(),
+                                job.kind()
                             );
-                            job_processor
-                                .fail_job(
-                                    handler.queue(),
-                                    handler.kind(),
-                                    &id,
-                                    json!({ "error": e.to_string() }),
-                                )
-                                .await?;
                         }
                     }
                 }

@@ -8,6 +8,9 @@ pub enum Error {
     #[error("JSON error")]
     JsonError(#[from] serde_json::Error),
 
+    #[error("Not supported error")]
+    NotSupported(String),
+
     #[error("Other error")]
     OtherError(#[from] Box<dyn std::error::Error + Sync + Send>),
 
