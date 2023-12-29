@@ -114,13 +114,28 @@ impl Producer for SurrealProducer {
         }
     }
 
-    async fn cancel(&self, queue: &str, kind: &str, id: &str) -> Result<(), Error> {
+    async fn cancel_by_id(&self, queue: &str, kind: &str, id: &str) -> Result<(), Error> {
         self.db
             .query(r#"DELETE type::thing($table, $id) WHERE queue=$queue AND kind=$kind"#)
             .bind(("table", &self.table))
             .bind(("id", id))
             .bind(("queue", queue))
             .bind(("kind", kind))
+            .await
+            .map_err(convert_surrealdb_error)?
+            .check()
+            .map_err(convert_surrealdb_error)?;
+
+        Ok(())
+    }
+
+    async fn cancel_by_unique_key(&self, queue: &str, kind: &str, key: &str) -> Result<(), Error> {
+        self.db
+            .query(r#"DELETE type::table($table) WHERE queue=$queue AND kind=$kind AND unique_key=$key"#)
+            .bind(("table", &self.table))
+            .bind(("queue", queue))
+            .bind(("kind", kind))
+            .bind(("key", key))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
