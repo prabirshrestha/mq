@@ -41,7 +41,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose --locked --all --release
+          args: --verbose --all --release
       - name: Run test
         run: cargo test
 
