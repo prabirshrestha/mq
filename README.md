@@ -19,7 +19,7 @@ Refer to the examples on the usage.
 
 # Supported Backends
 
-* SurrealDB (requires v1.0.0-beta10+). For SurrealDB v1.0.0-beta9 use v0.4.8 version for mq.
+* SurrealDB
 
 If you are interested in other backends feel free submit PR or features requests.
 
