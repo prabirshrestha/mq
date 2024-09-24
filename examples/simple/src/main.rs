@@ -5,7 +5,7 @@ use mq::{Consumer, Context, Job, JobResult, Producer, Worker};
 use mq_surreal::{SurrealJobProcessor, SurrealProducer};
 use serde::Deserialize;
 use serde_json::json;
-use surrealdb::dbs::Capabilities;
+use surrealdb::opt::capabilities::Capabilities;
 use tokio_util::sync::CancellationToken;
 
 #[derive(Deserialize, Debug)]
@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     let db = Arc::new(
         surrealdb::engine::any::connect((
             format!(
-                "file://{}/data.db",
+                "surrealkv://{}/data.db",
                 std::env::current_dir().unwrap().to_string_lossy()
             ),
             surrealdb::opt::Config::new()
@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
     );
 
     // create surrealdb namespace and db
-    db.query("DEFINE NAMESPACE test; USE NAMESPACE test; DEFINE DATABASE test;")
+    db.query("DEFINE NAMESPACE IF NOT EXISTS test; USE NAMESPACE test; DEFINE DATABASE IF NOT EXISTS test;")
         .await?
         .check()?;
     db.use_ns("test").use_db("test").await?;
@@ -43,20 +43,20 @@ async fn main() -> Result<()> {
     // create table schema for mq
     db.query(format!(
         r#"
-DEFINE TABLE {table} SCHEMAFULL;
-DEFINE FIELD created_at     ON {table} TYPE datetime;
-DEFINE FIELD updated_at     ON {table} TYPE datetime;
-DEFINE FIELD scheduled_at   ON {table} TYPE datetime;
-DEFINE FIELD locked_at      ON {table} TYPE option<datetime>;
-DEFINE FIELD queue          ON {table} TYPE string;
-DEFINE FIELD kind           ON {table} TYPE string;
-DEFINE FIELD max_attempts   ON {table} TYPE number;
-DEFINE FIELD attempts       ON {table} TYPE number;
-DEFINE FIELD priority       ON {table} TYPE number;
-DEFINE FIELD unique_key     ON {table} TYPE option<string>;
-DEFINE FIELD lease_time     ON {table} TYPE number;
-DEFINE FIELD payload        ON {table} FLEXIBLE TYPE object;
-DEFINE FIELD error_reason   ON {table} FLEXIBLE TYPE option<object>;
+DEFINE TABLE IF NOT EXISTS {table} SCHEMAFULL;
+DEFINE FIELD IF NOT EXISTS created_at     ON {table} TYPE datetime;
+DEFINE FIELD IF NOT EXISTS updated_at     ON {table} TYPE datetime;
+DEFINE FIELD IF NOT EXISTS scheduled_at   ON {table} TYPE datetime;
+DEFINE FIELD IF NOT EXISTS locked_at      ON {table} TYPE option<datetime>;
+DEFINE FIELD IF NOT EXISTS queue          ON {table} TYPE string;
+DEFINE FIELD IF NOT EXISTS kind           ON {table} TYPE string;
+DEFINE FIELD IF NOT EXISTS max_attempts   ON {table} TYPE number;
+DEFINE FIELD IF NOT EXISTS attempts       ON {table} TYPE number;
+DEFINE FIELD IF NOT EXISTS priority       ON {table} TYPE number;
+DEFINE FIELD IF NOT EXISTS unique_key     ON {table} TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS lease_time     ON {table} TYPE number;
+DEFINE FIELD IF NOT EXISTS payload        ON {table} FLEXIBLE TYPE object;
+DEFINE FIELD IF NOT EXISTS error_reason   ON {table} FLEXIBLE TYPE option<object>;
     "#
     ))
     .await?

@@ -64,13 +64,13 @@ impl Producer for SurrealProducer {
                 COMMIT TRANSACTION;
                 "#,
             )
-            .bind(("table", &self.table))
-            .bind(("id", job.id()))
-            .bind(("queue", job.queue()))
-            .bind(("kind", job.kind()))
-            .bind(("payload", job.payload()))
+            .bind(("table", self.table.clone()))
+            .bind(("id", job.id().to_owned()))
+            .bind(("queue", job.queue().to_owned()))
+            .bind(("kind", job.kind().to_owned()))
+            .bind(("payload", job.payload().to_owned()))
             .bind(("now", now))
-            .bind(("unique_key", job.unique_key()))
+            .bind(("unique_key", job.unique_key().to_owned()))
             .bind((
                 "scheduled_at",
                 Datetime::from_str(
@@ -96,11 +96,11 @@ impl Producer for SurrealProducer {
     async fn exists(&self, queue: &str, kind: &str, id: &str) -> Result<bool, Error> {
         let mut result = self
             .db
-            .query("SELECT meta::id(id) as id, queue, kind FROM type::thing($table, $id) WHERE queue=$queue AND kind=$kind;")
-            .bind(("table", &self.table))
-            .bind(("id", id))
-            .bind(("queue", queue))
-            .bind(("kind", kind))
+            .query("SELECT record::id(id) as id, queue, kind FROM type::thing($table, $id) WHERE queue=$queue AND kind=$kind;")
+            .bind(("table", self.table.clone()))
+            .bind(("id", id.to_owned()))
+            .bind(("queue", queue.to_owned()))
+            .bind(("kind", kind.to_owned()))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
@@ -117,10 +117,10 @@ impl Producer for SurrealProducer {
     async fn cancel_by_id(&self, queue: &str, kind: &str, id: &str) -> Result<(), Error> {
         self.db
             .query(r#"DELETE type::thing($table, $id) WHERE queue=$queue AND kind=$kind"#)
-            .bind(("table", &self.table))
-            .bind(("id", id))
-            .bind(("queue", queue))
-            .bind(("kind", kind))
+            .bind(("table", self.table.clone()))
+            .bind(("id", id.to_owned()))
+            .bind(("queue", queue.to_owned()))
+            .bind(("kind", kind.to_owned()))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
@@ -132,10 +132,10 @@ impl Producer for SurrealProducer {
     async fn cancel_by_unique_key(&self, queue: &str, kind: &str, key: &str) -> Result<(), Error> {
         self.db
             .query(r#"DELETE type::table($table) WHERE queue=$queue AND kind=$kind AND unique_key=$key"#)
-            .bind(("table", &self.table))
-            .bind(("queue", queue))
-            .bind(("kind", kind))
-            .bind(("key", key))
+            .bind(("table", self.table.clone()))
+            .bind(("queue", queue.to_owned()))
+            .bind(("kind", kind.to_owned()))
+            .bind(("key", key.to_owned()))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
