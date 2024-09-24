@@ -8,8 +8,8 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.70"
 async-trait = "0.1.68"
-mq = { path = "../../mq", version = "0.10.0" }
-mq-surreal = { path = "../../mq-surreal", version = "0.10.0" }
+mq = { path = "../../mq", version = "0.20.0" }
+mq-surreal = { path = "../../mq-surreal", version = "0.20.0" }
 num_cpus = "1.15.0"
 serde = { version = "1.0.159", features = ["serde_derive"] }
 serde_json = "1.0.94"
