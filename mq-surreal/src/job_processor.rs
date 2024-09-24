@@ -52,11 +52,17 @@ impl JobProcessor for SurrealJobProcessor {
                 locked_at=$now,
                 updated_at=$now
             RETURN
-                meta::id(id) as id,
+                record::id(id) as id,
                 *"#,
             )
-            .bind(("table", &self.table))
-            .bind(("queues", queues))
+            .bind(("table", self.table.clone()))
+            .bind((
+                "queues",
+                queues
+                    .into_iter()
+                    .map(|q| q.to_string())
+                    .collect::<Vec<String>>(),
+            ))
             .bind((
                 "now",
                 Datetime::from_str(&OffsetDateTime::now_utc().format(&Rfc3339).unwrap()).unwrap(),
@@ -77,10 +83,10 @@ impl JobProcessor for SurrealJobProcessor {
     ) -> Result<(), Error> {
         self.db
             .query(r#"DELETE type::thing($table, $id) WHERE queue=$queue AND kind=$kind"#)
-            .bind(("table", &self.table))
-            .bind(("id", id))
-            .bind(("queue", queue))
-            .bind(("kind", kind))
+            .bind(("table", self.table.to_owned()))
+            .bind(("id", id.to_owned()))
+            .bind(("queue", queue.to_owned()))
+            .bind(("kind", kind.to_owned()))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
@@ -98,10 +104,10 @@ impl JobProcessor for SurrealJobProcessor {
     ) -> Result<(), Error> {
         self.db
             .query(r#"DELETE type::thing($table, $id) WHERE queue=$queue AND kind=$kind"#)
-            .bind(("table", &self.table))
-            .bind(("id", id))
-            .bind(("queue", queue))
-            .bind(("kind", kind))
+            .bind(("table", self.table.clone()))
+            .bind(("id", id.to_owned()))
+            .bind(("queue", queue.to_owned()))
+            .bind(("kind", kind.to_owned()))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
@@ -129,10 +135,10 @@ impl JobProcessor for SurrealJobProcessor {
                 queue=$queue AND kind=$kind
             "#,
             )
-            .bind(("table", &self.table))
-            .bind(("id", id))
-            .bind(("queue", queue))
-            .bind(("kind", kind))
+            .bind(("table", self.table.clone()))
+            .bind(("id", id.to_owned()))
+            .bind(("queue", queue.to_owned()))
+            .bind(("kind", kind.to_owned()))
             .bind(("error_reason", reason))
             .bind((
                 "now",
