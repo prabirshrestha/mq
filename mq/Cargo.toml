@@ -1,6 +1,6 @@
 [package]
 name = "mq"
-version = "0.20.0"
+version = "0.20.1"
 authors = ["Prabir Shrestha <mail@prabir.me>"]
 edition = "2021"
 license = "MIT"
