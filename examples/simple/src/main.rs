@@ -25,8 +25,7 @@ async fn main() -> Result<()> {
                 "surrealkv://{}/data.db",
                 std::env::current_dir().unwrap().to_string_lossy()
             ),
-            surrealdb::opt::Config::new()
-                .capabilities(Capabilities::all()),
+            surrealdb::opt::Config::new().capabilities(Capabilities::all()),
         ))
         .await?,
     );

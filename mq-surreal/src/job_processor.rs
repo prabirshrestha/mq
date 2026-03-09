@@ -67,10 +67,7 @@ impl JobProcessor for SurrealJobProcessor {
                     .map(|q| q.to_string())
                     .collect::<Vec<String>>(),
             ))
-            .bind((
-                "now",
-                Datetime::now(),
-            ))
+            .bind(("now", Datetime::now()))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
@@ -150,10 +147,7 @@ impl JobProcessor for SurrealJobProcessor {
             .bind(("queue", queue.to_owned()))
             .bind(("kind", kind.to_owned()))
             .bind(("error_reason", reason))
-            .bind((
-                "now",
-                Datetime::now(),
-            ))
+            .bind(("now", Datetime::now()))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
