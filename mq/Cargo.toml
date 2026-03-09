@@ -1,10 +1,11 @@
 [package]
 name = "mq"
-version = "0.20.1"
+version = "0.21.0"
 authors = ["Prabir Shrestha <mail@prabir.me>"]
 edition = "2021"
 license = "MIT"
 description = "Simple Message Queue"
+readme = "../README.md"
 repository = "https://github.com/prabirshrestha/mq"
 keywords = ["job", "scheduler", "queue"]
 

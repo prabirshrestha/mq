@@ -1,12 +1,16 @@
-use std::{str::FromStr, sync::Arc};
+use std::sync::Arc;
 
 use async_trait::async_trait;
 use mq::{Error, Job, JobProcessor};
 use serde_json::Value;
-use surrealdb::{engine::any::Any, sql::Datetime, Surreal};
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use surrealdb::{engine::any::Any, types::Datetime, Surreal};
 
 use crate::error::convert_surrealdb_error;
+
+fn surreal_value_to_job(val: surrealdb::types::Value) -> Result<Job, Error> {
+    let json_val = val.into_json_value();
+    serde_json::from_value(json_val).map_err(|e| Error::OtherError(Box::new(e)))
+}
 
 pub struct SurrealJobProcessor {
     db: Arc<Surreal<Any>>,
@@ -65,14 +69,20 @@ impl JobProcessor for SurrealJobProcessor {
             ))
             .bind((
                 "now",
-                Datetime::from_str(&OffsetDateTime::now_utc().format(&Rfc3339).unwrap()).unwrap(),
+                Datetime::now(),
             ))
             .await
             .map_err(convert_surrealdb_error)?
             .check()
             .map_err(convert_surrealdb_error)?;
 
-        Ok(result.take(0).map_err(convert_surrealdb_error)?)
+        let job = result
+            .take::<Option<surrealdb::types::Value>>(0)
+            .map_err(convert_surrealdb_error)?
+            .map(surreal_value_to_job)
+            .transpose()?;
+
+        Ok(job)
     }
 
     async fn complete_job_with_success(
@@ -82,7 +92,7 @@ impl JobProcessor for SurrealJobProcessor {
         id: &str,
     ) -> Result<(), Error> {
         self.db
-            .query(r#"DELETE type::thing($table, $id) WHERE queue=$queue AND kind=$kind"#)
+            .query(r#"DELETE type::record($table, $id) WHERE queue=$queue AND kind=$kind"#)
             .bind(("table", self.table.to_owned()))
             .bind(("id", id.to_owned()))
             .bind(("queue", queue.to_owned()))
@@ -103,7 +113,7 @@ impl JobProcessor for SurrealJobProcessor {
         _message: Option<String>,
     ) -> Result<(), Error> {
         self.db
-            .query(r#"DELETE type::thing($table, $id) WHERE queue=$queue AND kind=$kind"#)
+            .query(r#"DELETE type::record($table, $id) WHERE queue=$queue AND kind=$kind"#)
             .bind(("table", self.table.clone()))
             .bind(("id", id.to_owned()))
             .bind(("queue", queue.to_owned()))
@@ -126,7 +136,7 @@ impl JobProcessor for SurrealJobProcessor {
         self.db
             .query(
                 r#"
-            UPDATE type::thing($table, $id)
+            UPDATE type::record($table, $id)
             SET
                 locked_at=NONE,
                 updated_at=$now,
@@ -142,7 +152,7 @@ impl JobProcessor for SurrealJobProcessor {
             .bind(("error_reason", reason))
             .bind((
                 "now",
-                Datetime::from_str(&OffsetDateTime::now_utc().format(&Rfc3339).unwrap()).unwrap(),
+                Datetime::now(),
             ))
             .await
             .map_err(convert_surrealdb_error)?

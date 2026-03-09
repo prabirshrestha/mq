@@ -26,7 +26,6 @@ async fn main() -> Result<()> {
                 std::env::current_dir().unwrap().to_string_lossy()
             ),
             surrealdb::opt::Config::new()
-                .set_strict(true)
                 .capabilities(Capabilities::all()),
         ))
         .await?,
@@ -55,8 +54,8 @@ DEFINE FIELD IF NOT EXISTS attempts       ON {table} TYPE number;
 DEFINE FIELD IF NOT EXISTS priority       ON {table} TYPE number;
 DEFINE FIELD IF NOT EXISTS unique_key     ON {table} TYPE option<string>;
 DEFINE FIELD IF NOT EXISTS lease_time     ON {table} TYPE number;
-DEFINE FIELD IF NOT EXISTS payload        ON {table} FLEXIBLE TYPE object;
-DEFINE FIELD IF NOT EXISTS error_reason   ON {table} FLEXIBLE TYPE option<object>;
+DEFINE FIELD IF NOT EXISTS payload        ON {table} TYPE object FLEXIBLE;
+DEFINE FIELD IF NOT EXISTS error_reason   ON {table} TYPE option<object> FLEXIBLE;
     "#
     ))
     .await?
