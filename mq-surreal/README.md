@@ -6,8 +6,8 @@
 
 ```toml
 [dependencies]
-mq = "0.21.0"
-mq-surreal = "0.21.0"
+mq = "0.30.0"
+mq-surreal = "0.30.0"
 surrealdb = { version = "3.0.2", features = ["kv-surrealkv"] }
 ```
 
@@ -72,4 +72,4 @@ DEFINE FIELD IF NOT EXISTS error_reason   ON queue TYPE option<object> FLEXIBLE;
 |---------------------|----------------------|
 | `0.10.0`            | `>= 1.5.0 && < 2.x` |
 | `0.20.x`            | `>= 2.0.0 && < 3.x` |
-| `0.21.x`            | `>= 3.0.0 && < 4.x` |
+| `0.30.x`            | `>= 3.0.0 && < 4.x` |
