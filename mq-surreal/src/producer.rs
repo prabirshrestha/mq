@@ -1,9 +1,8 @@
-use std::{str::FromStr, sync::Arc};
+use std::sync::Arc;
 
 use async_trait::async_trait;
 use mq::{Error, Job, Producer};
-use surrealdb::{engine::any::Any, sql::Datetime, Surreal};
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use surrealdb::{engine::any::Any, types::Datetime, Surreal};
 
 use crate::error::convert_surrealdb_error;
 
@@ -24,7 +23,7 @@ impl SurrealProducer {
 #[async_trait]
 impl Producer for SurrealProducer {
     async fn publish(&self, job: Job) -> Result<(), Error> {
-        let now = Datetime::from_str(&OffsetDateTime::now_utc().format(&Rfc3339).unwrap()).unwrap();
+        let now = Datetime::now();
 
         self.db
             .query(
@@ -45,7 +44,7 @@ impl Producer for SurrealProducer {
                 END;
 
                 IF $allow THEN
-                    CREATE type::thing($table, $id)
+                    CREATE type::record($table, $id)
                     SET created_at=$now,
                         updated_at=$now,
                         scheduled_at=$scheduled_at,
@@ -73,13 +72,12 @@ impl Producer for SurrealProducer {
             .bind(("unique_key", job.unique_key().to_owned()))
             .bind((
                 "scheduled_at",
-                Datetime::from_str(
-                    &job.scheduled_at()
-                        .unwrap_or_else(|| (OffsetDateTime::now_utc()))
-                        .format(&Rfc3339)
-                        .unwrap(),
-                )
-                .unwrap(),
+                job.scheduled_at()
+                    .map(|t| {
+                        Datetime::from_timestamp(t.unix_timestamp(), t.nanosecond())
+                            .expect("valid timestamp")
+                    })
+                    .unwrap_or_else(Datetime::now),
             ))
             .bind(("attempts", job.attempts()))
             .bind(("max_attempts", job.max_attempts()))
@@ -96,7 +94,7 @@ impl Producer for SurrealProducer {
     async fn exists(&self, queue: &str, kind: &str, id: &str) -> Result<bool, Error> {
         let mut result = self
             .db
-            .query("SELECT record::id(id) as id, queue, kind FROM type::thing($table, $id) WHERE queue=$queue AND kind=$kind;")
+            .query("SELECT record::id(id) as id, queue, kind FROM type::record($table, $id) WHERE queue=$queue AND kind=$kind;")
             .bind(("table", self.table.clone()))
             .bind(("id", id.to_owned()))
             .bind(("queue", queue.to_owned()))
@@ -116,7 +114,7 @@ impl Producer for SurrealProducer {
 
     async fn cancel_by_id(&self, queue: &str, kind: &str, id: &str) -> Result<(), Error> {
         self.db
-            .query(r#"DELETE type::thing($table, $id) WHERE queue=$queue AND kind=$kind"#)
+            .query(r#"DELETE type::record($table, $id) WHERE queue=$queue AND kind=$kind"#)
             .bind(("table", self.table.clone()))
             .bind(("id", id.to_owned()))
             .bind(("queue", queue.to_owned()))
