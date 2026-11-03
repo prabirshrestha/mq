@@ -15,4 +15,4 @@ keywords = ["job", "scheduler", "queue"]
 async-trait = "0.1.80"
 mq = { "path" = "../mq", version = "0.30.0" }
 serde_json = "1.0.116"
-surrealdb = "3.0.2"
+surrealdb = "4.0.0"
